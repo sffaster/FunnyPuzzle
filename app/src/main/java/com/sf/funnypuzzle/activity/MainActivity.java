@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -149,18 +150,28 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (resultCode == RESULT_OK) {
             if (requestCode == RESULT_IMAGE && data != null) {
                 // 相册
-                Cursor cursor = this.getContentResolver().query(
-                        data.getData(), null, null, null, null);
-                cursor.moveToFirst();
-                String imagePath = cursor.getString(
-                        cursor.getColumnIndex("_data"));
-                Intent intent = new Intent(
-                        MainActivity.this,
-                        PuzzleMain.class);
-                intent.putExtra("picPath", imagePath);
-                intent.putExtra("mType", mType);
-                cursor.close();
-                startActivity(intent);
+                try {
+                    Uri selectedImage = data.getData();
+                    String[] filePathColumn = { MediaStore.Images.Media.DATA };
+
+                    Cursor cursor = this.getContentResolver().query(selectedImage,
+                            filePathColumn, null, null, null);
+
+                    String imagePath;
+                    if (cursor !=null) {
+                        cursor.moveToFirst();
+                        imagePath = cursor.getString(cursor.getColumnIndex("_data"));
+                        cursor.close();
+                    }else {
+                        imagePath = selectedImage.getPath();
+                    }
+                    Intent intent = new Intent(MainActivity.this,PuzzleMain.class);
+                    intent.putExtra("mPicPath", imagePath);
+                    intent.putExtra("mType", mType);
+                    startActivity(intent);
+                }catch (Exception e){
+                    Log.d("MainActivity", e.toString());
+                }
             } else if (requestCode == RESULT_CAMERA) {
                 // 相机
                 Intent intent = new Intent(
